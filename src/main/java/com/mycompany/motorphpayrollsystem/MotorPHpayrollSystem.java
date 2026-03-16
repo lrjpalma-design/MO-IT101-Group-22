@@ -372,7 +372,7 @@ public class MotorPHpayrollSystem {
     public static void allEmployees() {
         
         try {
-            File employeeFile  = new File ("src/Employee Details.csv");
+            File employeeFile  = new File ("Employee Details.csv");
             BufferedReader br = new BufferedReader(new FileReader(employeeFile));
  
             String line;

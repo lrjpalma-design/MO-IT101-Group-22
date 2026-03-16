@@ -3,6 +3,10 @@ package com.mycompany.motorphpayrollsystem;
 
 import java.util.Scanner;
 import java.io.*;
+import java.time.Duration;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+
 
 
 public class MotorPHpayrollSystem {
@@ -10,7 +14,7 @@ public class MotorPHpayrollSystem {
     static Scanner scanner = new Scanner (System.in);
    
     public static void main(String[] args) {
-       
+     
         System.out.println("********** MotorPH Payroll System **********");
         login();
         
@@ -324,7 +328,7 @@ public class MotorPHpayrollSystem {
         String empNum = scanner.nextLine();
 
         try {
-            File employeeFile  = new File ("src/Employee Details.csv");
+            File employeeFile  = new File ("Employee Details.csv");
             BufferedReader br = new BufferedReader(new FileReader(employeeFile));
 
             String line;
@@ -436,72 +440,81 @@ public class MotorPHpayrollSystem {
             double net2nd = gross2nd - totalDeductions;
  
          
-            System.out.println("--- " + mName + " 1st Cutoff (" + mName + " 1 - 15) ---");
-            System.out.println("Total Hours Worked : " + hours1st);
-            System.out.println("Gross Salary       : " + gross1st);
-            System.out.println("Net Salary         : " + net1st);
- 
-    
-            System.out.println("--- " + mName + " 2nd Cutoff (" + mName + " 16 - " + last + ") ---");
-            System.out.println("Total Hours Worked : " + hours2nd);
-            System.out.println("Gross Salary       : " + gross2nd);
-            System.out.println("SSS                : " + sss);
-            System.out.println("PhilHealth         : " + philhealth);
-            System.out.println("Pag-IBIG           : " + pagibig);
-            System.out.println("Tax                : " + tax);
-            System.out.println("Total Deductions   : " + totalDeductions);
-            System.out.println("Net Salary         : " + net2nd);
-        }
- 
         
+    
+            System.out.println("--- " + mName + " 1st Cutoff (" + mName + " 1 - 15) ---");
+            System.out.println("Total Hours Worked : " + String.format("%.2f", hours1st));
+            System.out.println("Gross Salary       : " + String.format("%.2f", gross1st));
+            System.out.println("Net Salary         : " + String.format("%.2f", net1st));
+
+            System.out.println("--- " + mName + " 2nd Cutoff (" + mName + " 16 - " + last + ") ---");
+            System.out.println("Total Hours Worked : " + String.format("%.2f", hours2nd));
+            System.out.println("Gross Salary       : " + String.format("%.2f", gross2nd));
+            System.out.println("SSS                : " + String.format("%.2f", sss));
+            System.out.println("PhilHealth         : " + String.format("%.2f", philhealth));
+            System.out.println("Pag-IBIG           : " + String.format("%.2f", pagibig));
+            System.out.println("Tax                : " + String.format("%.2f", tax));
+            System.out.println("Total Deductions   : " + String.format("%.2f", totalDeductions));
+            System.out.println("Net Salary         : " + String.format("%.2f", net2nd));
+        }
+
     }
     
     public static double getTotalHours(String empNum, int month, int startDay, int endDay) {
-        
-        double totalHours = 0;
-        try {
 
-            File attendanceFile = new File("src/AttendanceRecord.csv");
+        double totalHours = 0;
+
+        try {
+            
+            File attendanceFile = new File("AttendanceRecord.csv");
             BufferedReader br = new BufferedReader(new FileReader(attendanceFile));
-            
             String line;
-            
+            br.readLine();
+
             while ((line = br.readLine()) != null) {
                 String[] col = line.split(",");
 
                 if (!col[0].trim().equals(empNum)) {
                     continue;
                 }
+
                 String date = col[3].trim();
                 String[] dateParts = date.split("/");
                 int recMonth = Integer.parseInt(dateParts[0]);
                 int recDay = Integer.parseInt(dateParts[1]);
+
                 if (recMonth != month) {
                     continue;
                 }
                 if (recDay < startDay || recDay > endDay) {
                     continue;
                 }
-                double loginMinutes = parseTimeToMinutes(col[4].trim());
-                double logoutMinutes = parseTimeToMinutes(col[5].trim());
-                double workStart = 480;
-                double graceEnd = 485;
-                double workEnd = 1020;
-                if (loginMinutes >= workStart && loginMinutes <= graceEnd) {
-                    loginMinutes = workStart;
-                }
-                if (logoutMinutes > workEnd) {
-                    logoutMinutes = workEnd;
-                }
-                if (loginMinutes < workStart) {
-                    loginMinutes = workStart;
-                }
-                if (logoutMinutes <= loginMinutes) {
-                    continue;
-                }
-                double hoursWorked = (logoutMinutes - loginMinutes) / 60;
 
-                if (hoursWorked >= 8) {
+               
+                LocalTime login = LocalTime.parse(col[4].trim(), DateTimeFormatter.ofPattern("H:mm"));
+                LocalTime logout = LocalTime.parse(col[5].trim(), DateTimeFormatter.ofPattern("H:mm"));
+                LocalTime graceEnd = LocalTime.of(8, 5);   
+                LocalTime workStart = LocalTime.of(8, 0);  
+                LocalTime cutoff = LocalTime.of(17, 0); 
+
+               
+                if (!login.isAfter(graceEnd)) {
+                    login = workStart;
+                }
+
+            
+                if (logout.isAfter(cutoff)) {
+                    logout = cutoff;
+                }
+
+               
+                long minutesWorked = Duration.between(login, logout).toMinutes();
+
+            
+                double hoursWorked = minutesWorked / 60.0;
+
+             
+                if (hoursWorked >= 8.0) {
                     hoursWorked = 8.0;
                 } else {
                     hoursWorked = 7.5;
@@ -509,10 +522,13 @@ public class MotorPHpayrollSystem {
 
                 totalHours = totalHours + hoursWorked;
             }
+
             br.close();
+
         } catch (Exception e) {
             System.out.println("Error reading attendance file: " + e.getMessage());
         }
+
         return totalHours;
     }
     

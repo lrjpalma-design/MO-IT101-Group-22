@@ -33,5 +33,4 @@ The program calculates the gross salary and applies government deductions such a
 
 
 **Project Plan Link**
-
-[Project Plan]([url](https://docs.google.com/spreadsheets/d/1N8Z2OvamBJiVQsP01zDYfuNOTlllu6azc_9pd9oNzi4/edit?usp=sharing))
+(https://docs.google.com/spreadsheets/d/1N8Z2OvamBJiVQsP01zDYfuNOTlllu6azc_9pd9oNzi4/edit?usp=sharing))
